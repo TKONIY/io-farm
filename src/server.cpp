@@ -1,10 +1,10 @@
-#include "block_server.h"
+#include "single_reactor_server.h"
 int main() {
-  tcp::block_server server;
+  tcp::single_reactor_server server;
   server.on_message([&](const auto &msg) {
     fmt::print("[DEBUG] server recv {}\n", msg);
 
-    // block call
+    // async call
 
     server.set_response(msg.c_str());
   });
