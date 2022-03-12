@@ -25,7 +25,7 @@ void tcp::block_server::run(const char *ip, uint16_t port) {
 
   // socket()
   tcp::check(server_fd = socket(AF_INET, SOCK_STREAM, 0),
-             []() { throw "socket() error"; });
+             []() { throw std::runtime_error("socket() error"); });
 
   // bind()
   sockaddr_in server_addr{};
@@ -33,10 +33,11 @@ void tcp::block_server::run(const char *ip, uint16_t port) {
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(port);
   tcp::check(bind(server_fd, (sockaddr *)&server_addr, sizeof(server_addr)),
-             []() { throw "bind() error"; });
+             []() { throw std::runtime_error("bind() error"); });
 
   // listen
-  tcp::check(listen(server_fd, N_LISTEN), []() { throw "listen() error"; });
+  tcp::check(listen(server_fd, N_LISTEN),
+             []() { throw std::runtime_error("listen() error"); });
 
   // loop, can be dispatched to each threads
   while (true) {
@@ -57,7 +58,7 @@ void tcp::block_server::accept_and_handle(int server_fd) {
 
   int client_fd{};
   tcp::check(client_fd = accept(server_fd, (sockaddr *)&client_addr, &addr_len),
-             []() { throw "accept() failed"; });
+             []() { throw std::runtime_error("accept() failed"); });
 
   // run to complete
   _responsed = false;
@@ -65,7 +66,8 @@ void tcp::block_server::accept_and_handle(int server_fd) {
     // read
     char buffer[1024];
     int n_read{};
-    tcp::check(n_read = read(client_fd, buffer, 1024), []() { throw "read() failed"; });
+    tcp::check(n_read = read(client_fd, buffer, 1024),
+               []() { throw std::runtime_error("read() failed"); });
     if (n_read == 0) {
       fmt::print("[DEBUG] socket closed from other side\n");
       close(client_fd);
@@ -89,7 +91,7 @@ void tcp::block_server::accept_and_handle(int server_fd) {
   while (n_all_write < n_all) {
     int n_write{};
     tcp::check(n_write = write(client_fd, buffer + n_all_write, n_all - n_all_write),
-               []() { throw "write() failed"; });
+               []() { throw std::runtime_error("write() failed"); });
     n_all_write += n_write;
   }
 
